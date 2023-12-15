@@ -1,102 +1,75 @@
-import React, { useEffect, useRef, useState } from 'react';
-import data from '../utilities/data.json';
+import React, { useRef, useEffect, useState } from "react";
+import { ListComponent } from "./ListComponent";
+import { Source } from "../images/Source";
+import { Destination } from "../images/Destination";
+import { Datamodel } from "../images/Datamodel";
+import { renderToString } from "react-dom/server";
 
 const CanvasComponent = () => {
   const canvasRef = useRef(null);
-  const [allKeys, setAllKeys] = useState([]);
+  const [svg, setSvg] = useState();
+  const [svgText, setSvgText] = useState();
+
 
   useEffect(() => {
-    const keys = Object.keys(data);
-    setAllKeys(keys);
-  }, []);
-
-  useEffect(() => {
+    if(svg && svgText){
+    const image = new Image();
     const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const context = canvas.getContext("2d");
+    canvas.width = window.innerWidth // Adjust width as needed
+    canvas.height = window.innerHeight; // Adjust height as needed
 
-    if (allKeys) {
-      let startY = 50;
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.imageSmoothingEnabled = false;
 
-      allKeys.forEach((key) => {
-        // Set up separate sections for endpoints and data-models
-        if (key === 'endpoints' || key === 'Data-models') {
-          drawSection(ctx, data[key], key, startY);
-          // Adjust startY for the next section
-          startY += 150;
-        }
-      });
-    }
-  }, [allKeys]);
+    // Draw the SVG image
+    image.src = `data:image/svg+xml;base64,${btoa(renderToString(svg))}`;
+    image.onload = () => {
+      context.drawImage(image, 0, 0, 100, 100);
 
-  const drawSection = (ctx, items, sectionName, startY) => {
-    let startX = 50;
+      // Draw text beneath the SVG image
+      context.font = "15px Arial"; // Set the font size and style
+      context.fillStyle = "black"; // Set the text color
+      context.fillText(svgText, 0, 130); // Adjust the coordinates as needed
+    };}
 
-    // Draw heading
-    ctx.fillStyle = 'black';
-    ctx.font = 'bold 16px Arial';
-    ctx.fillText(sectionName, startX, startY);
+  }, [svg, svgText]);
 
-    // Draw shapes based on the type
-    items.forEach((item) => {
-      const color = getColor(item.name);
-      let shapeType;
-
-      // Set shape type based on section
-      if (sectionName === 'endpoints') {
-        shapeType = item.type === 'source' ? 'rectangle' : 'circle';
-      } else if (sectionName === 'Data-models') {
-        shapeType = 'triangle';
-      }
-
-      if (shapeType === 'rectangle') {
-        drawRectangle(ctx, startX, startY + 20, color);
-      } else if (shapeType === 'circle') {
-        drawCircle(ctx, startX, startY + 20, color);
-      } else if (shapeType === 'triangle') {
-        drawTriangle(ctx, startX, startY + 20, color);
-      }
-
-      // Draw name below the shape
-      ctx.fillStyle = 'black';
-      ctx.fillText(item.name, startX, startY + 80);
-
-      // Adjust the spacing for the next shape
-      startX += 150;
-    });
-  };
-
-  const getColor = (productName) => {
-    // Implement your logic to assign colors based on product name
-    // For simplicity, using a basic hash function for illustration
-    const hash = productName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    const color = `hsl(${hash % 360}, 50%, 50%)`;
-    return color;
-  };
-
-  const drawRectangle = (ctx, x, y, color) => {
-    ctx.fillStyle = color;
-    ctx.fillRect(x, y, 100, 50); // Adjust the dimensions as needed
-  };
-
-  const drawCircle = (ctx, x, y, color) => {
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    ctx.arc(x + 50, y + 25, 25, 0, 2 * Math.PI); // Adjust the radius as needed
-    ctx.fill();
-  };
-
-  const drawTriangle = (ctx, x, y, color) => {
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    ctx.lineTo(x + 50, y - 50);
-    ctx.lineTo(x + 100, y);
-    ctx.closePath();
-    ctx.fill();
-  };
-
-  return <canvas ref={canvasRef} width={window.innerWidth} height={window.innerHeight} />;
+  return (
+    <div style={{ display: "flex" }}>
+      <div
+        style={{
+          width: "15%",
+          background: "#C0BFFF",
+          height: "100vh",
+          borderRadius: "4px",
+          position: "relative",
+          padding: "15px",
+          boxSizing: "border-box",
+        }}
+      >
+        <ListComponent setSvg={setSvg} setSvgText={setSvgText}/>
+      </div>
+      <div
+        style={{
+          width: "85%",
+          background: "white",
+          position: "relative",
+          overflow: "hidden",
+        }}
+      >
+        <canvas
+          ref={canvasRef}
+          style={{
+            width: "100%",
+            height: "100%",
+            boxSizing: "border-box",
+            border: "5px solid yellow",
+          }}
+        />
+      </div>
+    </div>
+  );
 };
 
 export default CanvasComponent;
