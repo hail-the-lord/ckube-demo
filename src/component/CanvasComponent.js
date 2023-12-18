@@ -7,33 +7,84 @@ import { renderToString } from "react-dom/server";
 
 const CanvasComponent = () => {
   const canvasRef = useRef(null);
-  const [svg, setSvg] = useState();
-  const [svgText, setSvgText] = useState();
+  const [imageList, setImageList] = useState([]);
+  const [coordinateList, setCordinateList] = useState([]);
+
+  const generateUniqueCoordinates = () => {
+    const randomX = Math.floor(Math.random() * 1251);
+    const randomY = Math.floor(Math.random() * 530);
+    return [randomX, randomY];
+  };
+
+
+  const fetchImage = (listItem, i, context) => {
+    const image = new Image();
+    const svgImage =
+      listItem.type === "source" ? (
+        <Source />
+      ) : listItem.type === "destination" ? (
+        <Destination />
+      ) : (
+        <Datamodel />
+      );
+    const svgText = listItem.name;
+
+    image.src = `data:image/svg+xml;base64,${btoa(renderToString(svgImage))}`;
+
+    image.onload = () => {
+      context.drawImage(image, listItem.abscissa, listItem.ordinate, 100, 100);
+      context.font = "15px Arial";
+      context.fillStyle = "black";
+      context.fillText(svgText, listItem.abscissa, listItem.ordinate + 115);
+    };
+  };
+
 
 
   useEffect(() => {
-    if(svg && svgText){
-    const image = new Image();
     const canvas = canvasRef.current;
     const context = canvas.getContext("2d");
-    canvas.width = window.innerWidth // Adjust width as needed
-    canvas.height = window.innerHeight; // Adjust height as needed
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 
     context.clearRect(0, 0, canvas.width, canvas.height);
     context.imageSmoothingEnabled = false;
 
-    // Draw the SVG image
-    image.src = `data:image/svg+xml;base64,${btoa(renderToString(svg))}`;
-    image.onload = () => {
-      context.drawImage(image, 0, 0, 100, 100);
+    if (imageList.length) {
+      imageList.forEach((listItem, i) => {
+        fetchImage(listItem, i, context);
+      });
+    }
+  }, [imageList]);
 
-      // Draw text beneath the SVG image
-      context.font = "15px Arial"; // Set the font size and style
-      context.fillStyle = "black"; // Set the text color
-      context.fillText(svgText, 0, 130); // Adjust the coordinates as needed
-    };}
+  const addToList = (item) => {
+    const [randomX, randomY] = generateUniqueCoordinates();
+    const newItem = {
+      ...item,
+      abscissa: randomX,
+      ordinate: randomY,
+    };
+  
+    const hasCollision = imageList.some((existingItem) => {
+      const horizontalCollision =
+        newItem.abscissa < existingItem.abscissa + 100 &&
+        newItem.abscissa + 100 > existingItem.abscissa;
+  
+      const verticalCollision =
+        newItem.ordinate < existingItem.ordinate + 100 &&
+        newItem.ordinate + 100 > existingItem.ordinate;
+  
+      return horizontalCollision && verticalCollision;
+    });
+  
+    if (hasCollision) {
+      addToList(item);
+    } else {
+      setImageList((prevItems) => [...prevItems, newItem]);
+    }
+  };
+  
 
-  }, [svg, svgText]);
 
   return (
     <div style={{ display: "flex" }}>
@@ -48,7 +99,7 @@ const CanvasComponent = () => {
           boxSizing: "border-box",
         }}
       >
-        <ListComponent setSvg={setSvg} setSvgText={setSvgText}/>
+        <ListComponent addToList={addToList} />
       </div>
       <div
         style={{

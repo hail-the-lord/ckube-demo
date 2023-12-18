@@ -4,14 +4,12 @@ import { Source } from "../images/Source";
 import { Destination } from "../images/Destination";
 import { Datamodel } from "../images/Datamodel";
 
-export const ListComponent = ({ setSvg, setSvgText }) => {
+export const ListComponent = ({ addToList }) => {
   const [buttonClicked, setButtonClicked] = useState("source");
 
   const handleClick = (item) => {
-    const svgImage = item.type === 'source' ? <Source/> : item.type === 'destination' ? <Destination/> : <Datamodel/> 
-    setSvg(svgImage)
-    setSvgText(item.name)
-  }
+    addToList(item);
+  };
 
   const handleButtonClick = (buttonType) => {
     setButtonClicked(buttonType);
@@ -65,7 +63,11 @@ export const ListComponent = ({ setSvg, setSvgText }) => {
       </div>
       <div>
         {data["Data-models"].map((item, i) => (
-          <p key={i} style={{ cursor: "pointer" }}    onClick={() => handleClick(item)}>
+          <p
+            key={i}
+            style={{ cursor: "pointer" }}
+            onClick={() => handleClick(item)}
+          >
             {item.name}
           </p>
         ))}
