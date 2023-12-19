@@ -17,7 +17,7 @@ export const ListComponent = ({ addToList }) => {
 
   const renderEndpoints = () => (
     <>
-      <div style={{ display: "flex", width: "100%" }}>
+      <div style={{ display: "flex" }}>
         <div style={{ width: "50%" }}>
           <button
             style={{ width: "100%", height: "32px", cursor: "pointer" }}
@@ -76,7 +76,7 @@ export const ListComponent = ({ addToList }) => {
   );
 
   const displayItem = Object.keys(data).map((item, i) => (
-    <div key={i} style={{ minHeight: "300px" }}>
+    <div key={i} style={{ minHeight: "283px" }}>
       <p>{item === "endpoints" ? "End Points" : "Data Models"}</p>
       {item === "endpoints" ? renderEndpoints() : renderDataModels()}
     </div>

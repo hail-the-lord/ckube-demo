@@ -4,6 +4,8 @@ import { Source } from "../images/Source";
 import { Destination } from "../images/Destination";
 import { Datamodel } from "../images/Datamodel";
 import { renderToString } from "react-dom/server";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const CanvasComponent = () => {
   const canvasRef = useRef(null);
@@ -12,10 +14,9 @@ const CanvasComponent = () => {
 
   const generateUniqueCoordinates = () => {
     const randomX = Math.floor(Math.random() * 1251);
-    const randomY = Math.floor(Math.random() * 530);
+    const randomY = Math.floor(Math.random() * 500);
     return [randomX, randomY];
   };
-
 
   const fetchImage = (listItem, i, context) => {
     const image = new Image();
@@ -34,12 +35,12 @@ const CanvasComponent = () => {
     image.onload = () => {
       context.drawImage(image, listItem.abscissa, listItem.ordinate, 100, 100);
       context.font = "15px Arial";
-      context.fillStyle = "black";
+      context.fillStyle = "white";
       context.fillText(svgText, listItem.abscissa, listItem.ordinate + 115);
     };
   };
 
-
+  const notify = () => toast("No Space!");
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -64,27 +65,29 @@ const CanvasComponent = () => {
       abscissa: randomX,
       ordinate: randomY,
     };
-  
+
     const hasCollision = imageList.some((existingItem) => {
       const horizontalCollision =
         newItem.abscissa < existingItem.abscissa + 100 &&
         newItem.abscissa + 100 > existingItem.abscissa;
-  
+
       const verticalCollision =
         newItem.ordinate < existingItem.ordinate + 100 &&
         newItem.ordinate + 100 > existingItem.ordinate;
-  
+
       return horizontalCollision && verticalCollision;
     });
-  
+
     if (hasCollision) {
-      addToList(item);
+      try {
+        addToList(item);
+      } catch (error) {
+        notify();
+      }
     } else {
       setImageList((prevItems) => [...prevItems, newItem]);
     }
   };
-  
-
 
   return (
     <div style={{ display: "flex" }}>
@@ -115,10 +118,22 @@ const CanvasComponent = () => {
             width: "100%",
             height: "100%",
             boxSizing: "border-box",
-            border: "5px solid yellow",
+            background: "black",
           }}
         />
       </div>
+      <ToastContainer
+        position="top-center"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="dark"
+      />
     </div>
   );
 };
